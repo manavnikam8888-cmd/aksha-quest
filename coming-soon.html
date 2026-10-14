@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coming soon — WordSpark</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body data-page="quest" data-base="../">
+  <div id="chrome"></div>
+  <main class="center">
+    <div class="mascot" style="margin:20px auto" aria-hidden="true">🦉</div>
+    <h1 id="title"></h1>
+    <h2 id="questName"></h2>
+    <p id="text"></p>
+    <p><a class="btn" id="back" href="../index.html"></a></p>
+  </main>
+  <script src="../app.js"></script>
+  <script>
+    WS.onRender = function () {
+      const t = WS.t();
+      const q = new URLSearchParams(location.search).get("q");
+      const i = WS.QUEST_IDS.indexOf(q);
+      document.getElementById("title").textContent = t.soonTitle;
+      document.getElementById("questName").textContent = i >= 0 ? t.names[i] : "";
+      document.getElementById("text").textContent = t.soonText;
+      document.getElementById("back").textContent = t.backToMap;
+    };
+  </script>
+</body>
+</html>

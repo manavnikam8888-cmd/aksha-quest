@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quest map — WordSpark</title>
+  <meta name="description" content="Choose your next letter and word quest on the WordSpark map.">
+  <meta property="og:title" content="Quest map — WordSpark">
+  <meta property="og:description" content="Choose your next letter and word quest.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="map" data-base="">
+  <div id="chrome"></div>
+  <main>
+    <div class="hello">
+      <div class="mascot" aria-hidden="true">🦉</div>
+      <h1 id="hello"></h1>
+    </div>
+    <h2 id="mapTitle"></h2>
+    <ol id="quests"></ol>
+    <p class="note" id="demoNote"></p>
+  </main>
+  <footer>WordSpark</footer>
+  <script src="app.js"></script>
+  <script>
+    WS.onRender = function () {
+      const t = WS.t();
+      document.getElementById("hello").textContent = t.hello;
+      document.getElementById("mapTitle").textContent = t.mapTitle;
+      document.getElementById("demoNote").textContent = WS.state.demo ? t.demoNote : "";
+      const list = document.getElementById("quests");
+      list.innerHTML = "";
+      WS.QUEST_IDS.forEach((id, i) => {
+        const open = WS.isUnlocked(i);
+        const el = document.createElement(open ? "a" : "div");
+        el.className = "quest" + (open ? "" : " locked");
+        if (open) el.href = i === 0 ? "quest/letters.html" : "quest/coming-soon.html?q=" + id;
+        const stars = WS.stars(id);
+        const icon = open ? WS.QUEST_ICONS[i] : "🔒";
+        const desc = open ? (i === 0 ? t.letterDesc : "") : t.locked;
+        el.innerHTML =
+          `<span class="icon">${icon}</span>` +
+          `<span class="info"><div class="title">${i + 1}. ${t.names[i]}</div><div class="desc">${desc}</div></span>` +
+          `<span class="rating">${"⭐".repeat(stars)}${"☆".repeat(3 - stars)}</span>`;
+        const li = document.createElement("li");
+        li.appendChild(el);
+        list.appendChild(li);
+      });
+    };
+  </script>
+</body>
+</html>

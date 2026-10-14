@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Letter Garden — WordSpark</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body data-page="quest" data-base="../">
+  <div id="chrome"></div>
+  <main>
+    <h1 id="qTitle"></h1>
+    <p class="desc" id="qDesc"></p>
+    <div class="progress-bar"><span id="bar" style="width:0%"></span></div>
+    <p class="note" id="roundLabel"></p>
+
+    <div id="game">
+      <div class="big-letter" id="target"></div>
+      <div class="options" id="options"></div>
+      <p class="msg" id="msg"></p>
+      <div class="center"><button class="btn" id="nextBtn" hidden></button></div>
+    </div>
+
+    <div id="result" class="center" hidden>
+      <h2 id="resText"></h2>
+      <p style="font-size:2rem" id="resStars"></p>
+      <p>
+        <button class="btn" id="againBtn"></button>
+        <a class="btn ghost" id="mapBtn" href="../index.html"></a>
+      </p>
+    </div>
+  </main>
+  <script src="../app.js"></script>
+  <script>
+    const LETTERS = {
+      en: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),
+      hi: "अ आ इ ई उ ऊ ए ऐ ओ औ क ख ग घ च छ ज त द न प ब म य र ल व स ह".split(" "),
+      mr: "अ आ इ ई उ ऊ ए ऐ ओ औ क ख ग घ च छ ज त द न प ब म य र ल व स ह".split(" ")
+    };
+    const ROUNDS = 5;
+    let round = 0, correct = 0, answered = false, target = "";
+
+    const $ = id => document.getElementById(id);
+    const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
+
+    function startGame() {
+      round = 0; correct = 0;
+      $("game").hidden = false; $("result").hidden = true;
+      nextRound();
+    }
+
+    function nextRound() {
+      const t = WS.t();
+      const pool = LETTERS[WS.state.lang] || LETTERS.en;
+      answered = false;
+      target = pool[Math.floor(Math.random() * pool.length)];
+      const wrong = shuffle(pool.filter(l => l !== target)).slice(0, 3);
+      $("target").textContent = target;
+      $("msg").textContent = "";
+      $("nextBtn").hidden = true;
+      $("roundLabel").textContent = `${t.round} ${round + 1} ${t.of} ${ROUNDS}`;
+      $("bar").style.width = (round / ROUNDS * 100) + "%";
+      const box = $("options");
+      box.innerHTML = "";
+      shuffle([target, ...wrong]).forEach(letter => {
+        const b = document.createElement("button");
+        b.className = "opt";
+        b.textContent = letter;
+        b.addEventListener("click", () => pick(b, letter));
+        box.appendChild(b);
+      });
+    }
+
+    function pick(btn, letter) {
+      if (answered) return;
+      answered = true;
+      const t = WS.t();
+      document.querySelectorAll(".opt").forEach(b => {
+        b.disabled = true;
+        if (b.textContent === target) b.classList.add("right");
+      });
+      if (letter === target) { correct++; $("msg").textContent = t.right; }
+      else { btn.classList.add("wrong"); $("msg").textContent = t.wrong; }
+      $("nextBtn").textContent = (round + 1 === ROUNDS) ? t.finish : t.next;
+      $("nextBtn").hidden = false;
+    }
+
+    function finish() {
+      const t = WS.t();
+      const stars = correct >= 5 ? 3 : correct >= 4 ? 2 : correct >= 3 ? 1 : 0;
+      const q = WS.state.quests.letters || { stars: 0 };
+      q.stars = Math.max(q.stars, stars);
+      WS.state.quests.letters = q;
+      WS.state.sessions.push({ date: new Date().toISOString().slice(0, 10), quest: "letters", correct, total: ROUNDS });
+      WS.save();
+      WS.renderChrome();
+      $("bar").style.width = "100%";
+      $("game").hidden = true; $("result").hidden = false;
+      $("resText").textContent = `${t.result} ${correct}/${ROUNDS} ${t.correctWord}`;
+      $("resStars").textContent = `${t.starsEarned}: ${"⭐".repeat(stars) || "—"}`;
+      $("againBtn").textContent = t.playAgain;
+      $("mapBtn").textContent = t.backToMap;
+    }
+
+    $("nextBtn").addEventListener("click", () => {
+      round++;
+      if (round >= ROUNDS) finish(); else nextRound();
+    });
+    $("againBtn").addEventListener("click", startGame);
+
+    WS.onRender = function () {
+      const t = WS.t();
+      $("qTitle").textContent = "🌼 1. " + t.names[0];
+      $("qDesc").textContent = t.letterDesc;
+      $("mapBtn").textContent = t.backToMap;
+      if (!$("result").hidden) return;
+      startGame();
+    };
+  </script>
+</body>
+</html>
